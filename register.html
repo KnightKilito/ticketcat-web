@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery-2.1.1.min.js"></script>
+	<script>
+		function register() {
+			//获取用户输入的登录名字和密码
+			var user = {
+				username: $("#username").val(),
+				password: $("#password").val(),
+				nickname: $("#nickname").val(),
+				phone: $("#phone").val(),
+				identity: "guest"
+			}
+			var password1 = $("#password1").val();
+			var password = $("#password").val();
+			if (username != "" && password != "" &&  phone != "" &&password1 != "") {
+				if(password == password1){
+				$.ajax({
+					url: "http://www.zhelovechun.top:8081/tpm/user",
+					data: user,
+					type: "post",
+					xhrFields: { //保存session在跨域访问中不会丢失！！！
+						withCredentials: true
+					},
+					crossDomain: true,
+					success: function(data) {
+						if (data.state == 0) {
+							alert("注册成功，点击确定前往登录!");
+							location.href = "login.html";
+						} else if(data.state == 107){
+							alert("该账号已被注册");
+						} else if(data.state == -1){
+							alert("注册出错了")
+						}
+					}
+				})
+				}else{
+					alert("两次密码不一致！");
+				}
+			} else {
+				alert("请检查您的输入项不为空！");
+			}
+		}
+	</script>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Document</title>
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+			}
+
+			html {
+				height: 100%;
+			}
+
+			body {
+				background-image: linear-gradient(to bottom right, rgb(114, 135, 254), rgb(130, 88, 186));
+			}
+
+			.login-container {
+				width: 600px;
+				height: 315px;
+				margin: 0 auto;
+				margin-top: 10%;
+				border-radius: 15px;
+				box-shadow: 0 10px 50px 0px rbg(59, 45, 159);
+				background-color: rgb(95, 76, 194);
+			}
+
+			.left-container {
+				display: inline-block;
+				width: 330px;
+				border-top-left-radius: 15px;
+				border-bottom-left-radius: 15px;
+				padding: 60px;
+				background-image: linear-gradient(to bottom right, rgb(118, 76, 163), rgb(92, 103, 211));
+			}
+
+			.title {
+				color: #fff;
+				font-size: 18px;
+				font-weight: 200;
+			}
+
+			.title span {
+				border-bottom: 3px solid rgb(237, 221, 22);
+			}
+
+			.input-container {
+				padding: 20px 0;
+			}
+
+			input {
+				border: 0;
+				background: none;
+				outline: none;
+				color: #fff;
+				margin: 20px 0;
+				display: block;
+				width: 100%;
+				padding: 5px 0;
+				transition: .2s;
+				border-bottom: 1px solid rgb(199, 191, 219);
+			}
+
+			input:hover {
+				border-bottom-color: #fff;
+			}
+
+			::-webkit-input-placeholder {
+				color: rgb(199, 191, 219);
+			}
+
+			.message-container {
+				font-size: 14px;
+				transition: .2s;
+				color: rgb(199, 191, 219);
+				cursor: pointer;
+			}
+
+			.message-container:hover {
+				color: #fff;
+			}
+
+			.right-container {
+				width: 145px;
+				display: inline-block;
+				height: calc(100% - 120px);
+				vertical-align: top;
+				padding: 60px 0;
+			}
+
+			.regist-container {
+				text-align: center;
+				color: #fff;
+				font-size: 18px;
+				font-weight: 200;
+			}
+
+			.regist-container span {
+				border-bottom: 3px solid rgb(237, 221, 22);
+			}
+
+			.action-container {
+				font-size: 10px;
+				color: #fff;
+				text-align: center;
+				position: relative;
+				top: 200px;
+			}
+
+			.action-container span {
+				border: 1px solid rgb(237, 221, 22);
+				padding: 10px;
+				display: inline;
+				line-height: 20px;
+				border-radius: 20px;
+				position: absolute;
+				bottom: 10px;
+				left: calc(72px - 20px);
+				transition: .2s;
+				cursor: pointer;
+			}
+
+			.action-container span:hover {
+				background-color: rgb(237, 221, 22);
+				color: rgb(95, 76, 194);
+			}
+
+			.regist {
+				border-bottom: 3px solid rgb(237, 221, 22);
+				color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="login-container">
+			<div class="left-container">
+				<div class="title"><span>注册</span></div>
+				<div class="input-container">
+					<form>
+					<input type="text" id="username" name="username" placeholder="用户名"  autocomplete="new-password">
+					<input type="text" id="nickname" name="nickname" placeholder="昵称(可为空)" autocomplete="new-password"> 
+					<input type="text" id="phone" name="phone" placeholder="电话" autocomplete="new-password">
+					<input type="password" id="password" name="password" placeholder="密码" autocomplete="new-password">
+					<input type="password" id="password1" name="password1" placeholder="确认密码" autocomplete="new-password">
+					</form>
+				</div>
+			</div>
+			<div class="right-container">
+				<div class="regist-container" >
+					<a class="regist" href="login.html">登录</a>
+				</div>
+				<div class="action-container">
+					<span onclick="register()">提交</span>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

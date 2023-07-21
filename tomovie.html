@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="zxx">
+	<script src="assets/js/bootstrap.min.js"></script>
+	<script src="assets/js/jquery.min.js"></script>
+	<script src="assets/js/jquery-2.1.1.min.js"></script>
+	<script>
+		var value = sessionStorage.getItem('getLoginInfo')
+		var loginInfo = window.JSON.parse(value)
+		var token = sessionStorage.getItem('token')
+		var isLogin = sessionStorage.getItem('isLogin')
+		if(isLogin==null){
+			var isLogin = false
+		}
+		console.log(isLogin)
+		$(document).ready(function() {
+				console.log(isLogin)
+				if(isLogin==false){
+					var str =
+							'<a href="login.html">'+
+								'<img style="height: 40px;width: 40px;" src="assets/images/未登录-头像.png">'+
+							'</a>'+
+							'<a href="login.html">登录</a>';
+							$("#user").append(str)
+				}else{
+					var str =
+							'<a>'+
+								'<img style="height: 40px;width: 40px;" src='+loginInfo.avatar+'>'+
+							'</a>'+
+							'<button data-toggle="modal" data-target="#myModal">退出</button>'
+						$("#user").append(str)
+					}
+			})
+			function exit(){
+				sessionStorage.clear()
+				window.location.href="index.html"
+			}
+	</script>
+	<script>
+		var move = 0
+		var active_index = 0
+		var type = 0;
+		var j = 0;
+		var p = 0;
+		var mid =0;
+
+		var movie = sessionStorage.getItem('mitem')
+		var mitem = window.JSON.parse(movie)
+		var citem1 = sessionStorage.getItem('citem')
+		var citem = window.JSON.parse(citem1)
+		console.log(citem)
+		var did = 0
+		var fromcinema =  sessionStorage.getItem('fromcinema')
+		if(fromcinema==true){
+			var cid = citem.cid
+			var flag = 0;
+		}else{
+			var cid = citem.cid
+			var mid = mitem.mid
+		}
+			
+
+		$(document).ready(function() {
+			console.log(mid)
+			var url = "http://www.zhelovechun.top:8081/tpm/movie/cid/" + cid
+			console.log('getmovies_url'+url)
+			$.ajax({
+				url,
+				dataType: "json",
+				type: "get",
+				xhrFields: {
+					withCredentials: true
+				},
+				crossDomain: true,
+				success: function(data) {
+					console.log(data)
+					var midfordates = data.datas[0].mid
+					sessionStorage.setItem('midfordates',midfordates)
+					for (var i = 0; i < data.datas.length; i++) {
+						if (mid == data.datas[i].mid) {
+							move -= 160 * i
+							active_index = i
+							type = i
+						}
+					}
+					var box = '<div class="box" id="box" style="transform: translateX('+move+'px)"></div>'
+					$(".swiper").append(box)
+					for (var i = 0; i < data.datas.length; i++) {
+						var str = ''
+						if (data.datas[i].mid == mid || flag ==0 ) {
+							str = '<div>' +
+								'<img src=' + data.datas[i].img + ' class="active1" onclick="change('+i+')">'+
+								'</div>'
+								flag++
+						} else {
+							str = '<div>' +
+								'<img src=' + data.datas[i].img + ' class="noactive1" onclick="change('+i+')">'+
+								'</div>'
+						}
+						$(".box").append(str);
+					}
+					j++
+					$('#movie').val(data)	
+				},
+			})
+			 
+			 if(active_index!=0)
+				mid = sessionStorage.getItem('midfordates')
+			getDates()
+		})
+	</script>
+	<script>
+		function myTime(time) {
+			return time.split('T')[0]
+		}
+
+		function change(index) {
+			var movies = $('#movie').val().datas
+			var target = document.getElementById('eee')
+			target.parentNode.removeChild(target)
+			var target1 = document.getElementById('mycinema')
+			target1.parentNode.removeChild(target1)
+			var box = 
+				'<div class="cinema-top mycinema" id="mycinema">' +
+				'<p style="position: relative;bottom: -5px;left: 500px;">以下场次可供选择</p>' +
+				'<div class="filter-select"></div></div>' +
+				'<div class="cinema" id="eee"></div>'
+			$("#main").append(box)
+			if (index != type) {
+				move -= 160 * (index - type)
+				mid = movies[index].mid
+			}
+			getDates()
+			type = index
+			loadSwiper()
+		}
+		
+		function getDates() {
+			console.log('time')
+			var url = "http://www.zhelovechun.top:8081/tpm/session/"+cid+"/"+mid
+			console.log('time_url'+url)
+			$.ajax({
+				url,
+				dataType: "json",
+				type: "get",
+				xhrFields: {
+					withCredentials: true
+				},
+				crossDomain: true,
+				success: function(data) {
+					console.log(data)
+					if (data.stringArray.length > 0) {
+						for (var i = 0; i < data.stringArray.length; i++) {
+							var time = '<div class="time" onclick="selectTime('+i+')">'+data.stringArray[i]+'</div>'
+							$(".filter-select").append(time)
+						}
+						$('#dates').val(data.stringArray)
+						console.log('active'+active_index)
+						selectTime(0)
+					}
+				}
+			})
+		}
+
+		function selectTime(i) {
+			if (p != 0) {
+				var target = document.getElementById('eee')
+				target.parentNode.removeChild(target)
+				var box = '<div class="cinema" id="eee"></div>'
+				$("#main").append(box)
+			}
+			var movies = $('#movie').val().datas
+			var date = $('#dates').val()[i]
+			var url = "http://www.zhelovechun.top:8081/tpm/session/" + cid + "/" + mid + "/" + date		
+			console.log('date_index'+i)
+				console.log('select_url'+url)
+			$.ajax({
+				url,
+				dataType: "json",
+				type: "get",
+				xhrFields: {
+					withCredentials: true
+				},
+				crossDomain: true,
+				success: function(data) {
+					if(data.datas.length>0){
+					console.log(data.datas.length)
+					var sessions = window.JSON.stringify(data.datas)
+					sessionStorage.setItem('sessions',sessions)
+					for (var i = 0; i < data.datas.length; i++){
+						free = 50 - data.datas[i].orderednum
+						var str = '<div class="cinema-content" id="cinema-content">' +
+							'<div class="movie-title" style="margin-left:50px">' +
+							'	<strong style="float: left;margin-top:5px;margin-left: 30px;font-size:13px">' + movies[type].mname +
+							'</strong>' +
+							'	<span class="cinema-aaa" style="float: left;margin-top:8px;">特价优惠</span>' +
+							'	<div class="movie-time">' + data.datas[i].starttime + '-' + data.datas[i].endtime +
+							'</div>' +
+							'</div>' +
+							'<div class="movie-tip">' +
+							'	<div class="movie-place">放映厅</div>' +
+							'	<div class="movie-seat">座位情况</div>' +
+							'	<div class="movie-price">价格</div>' +
+							'	<div class="cinema-place">' + data.datas[i].hid + '号厅</div>' +
+							'	<div class="cinema-seat">还剩' + free + '座</div>' +
+							'	<div class="cinema-price1" style="color:red">￥' + data.datas[i].tprice + '起</div>' +
+							'</div>' +
+							'<div class="movie-button">' +
+							'	<button type="button" class="button1" style="margin-left:20px;margin-top:35px">' +
+							'		<a style="color: white;" onclick="toSeat('+data.datas[i].sid+')">选座</a>' +
+							'	</button>' +
+							'</div></div>';
+						$("#eee").append(str);
+					}
+					}
+				}
+			})
+			p++
+		}
+		function toSeat(toseat_sid){
+			var toseat_mitem = $('#movie').val().datas[type]
+			console.log(toseat_mitem)
+			var toseat_mitem1 = window.JSON.stringify(toseat_mitem)
+
+			var stemp = sessionStorage.getItem('sessions')
+			var sessions = window.JSON.parse(stemp)
+			for(var i=0;i<sessions.length;i++){
+				if(sessions[i].sid == toseat_sid){
+					var session = window.JSON.stringify(sessions[i])
+					sessionStorage.setItem('sessions',session)
+				}
+			}
+
+			sessionStorage.setItem('mitem',toseat_mitem1)
+			sessionStorage.setItem('toseat_sid',toseat_sid)
+			window.location.href="select.html"
+		}
+
+		function loadSwiper() {
+			var movies = $('#movie').val().datas
+			if (j != 0) {
+				var target = document.getElementById('box')
+				target.parentNode.removeChild(target)
+			}
+			var box = '<div class="box" id="box" style="transform: translateX(' + move + 'px)"></div>'
+			$(".swiper").append(box)
+			for (var i = 0; i < movies.length; i++) {
+				var str = ''
+				if (i == type)
+					str = '<div>' +
+					'<img src=' + movies[i].img + ' class="active1" onclick="change(' + i + ')">' +
+					'</div>'
+				else
+					str = '<div>' +
+					'<img src=' + movies[i].img + ' class="noactive1" onclick="change(' + i + ')">' +
+					'</div>'
+				$(".box").append(str);
+			}
+			j++
+		}
+	</script>
+	<head>
+		<!-- Required meta tags -->
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Movie</title>
+		<!-- Template CSS -->
+		<link rel="stylesheet" href="assets/css/style-starter.css">
+		<!-- Template CSS -->
+		<link
+			href="http://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap"
+			rel="stylesheet">
+		<!-- Template CSS -->
+	</head>
+
+	<body>
+
+		<!-- header -->
+		<header id="site-header" class="w3l-header fixed-top" style="z-index: 99999;">
+			<!--/nav-->
+			<nav class="navbar navbar-expand-lg navbar-light fill px-lg-0 py-0 px-3">
+				<div class="container">
+					<h1><a class="navbar-brand" href="index.html"><span class="fa fa-play icon-log"
+								aria-hidden="true"></span>
+							淘票猫</a></h1>
+					<!-- if logo is image enable this   
+						<a class="navbar-brand" href="#index.html">
+							<img src="image-path" alt="Your logo" title="Your logo" style="height:35px;" />
+						</a> -->
+					<button class="navbar-toggler collapsed" type="button" data-toggle="collapse"
+						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+						aria-expanded="false" aria-label="Toggle navigation">
+						<!-- <span class="navbar-toggler-icon"></span> -->
+						<span class="fa icon-expand fa-bars"></span>
+						<span class="fa icon-close fa-times"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<ul class="navbar-nav ml-auto">
+							<li class="nav-item">
+								<a class="nav-link" href="index.html">首页</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="movie.html">电影</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="cinema.html">影院</a>
+							</li>
+							<li class="nav-item">
+								<ul>
+									<div class="mine-dropdown">
+										<a href="#" class="dropbtn">我的
+										</a>
+										<div class="dropdown-content">
+											<a href="modifyuser.html">修改个人信息</a>
+											<a href="modifypassword.html">修改密码</a>
+											<a href="myorder.html">我的订单</a>
+										</div>
+									</div>
+								</ul>
+							</li>
+						</ul>
+
+						<!--/search-right-->
+						<!--/search-right-->
+						<div class="search-right">
+							<a href="#search" class="btn search-hny mr-lg-3 mt-lg-0 mt-4" title="search">搜索 <span
+									class="fa fa-search ml-3" aria-hidden="true"></span></a>
+							<!-- search popup -->
+							<div id="search" class="pop-overlay">
+								<div class="popup">
+									<form action="#" method="post" class="search-box">
+										<input type="search" placeholder="请输入电影的名称" name="search" required="required"
+											autofocus="">
+										<button type="submit" class="btn"><span class="fa fa-search"
+												aria-hidden="true"></span></button>
+									</form>
+									<div class="browse-items">
+										<h3 class="hny-title two mt-md-5 mt-4">标签浏览:</h3>
+										<ul class="search-items">
+											<li><a href="movie.html">动作</a></li>
+											<li><a href="movie.html">戏剧</a></li>
+											<li><a href="movie.html">家庭</a></li>
+											<li><a href="movie.html">惊悚</a></li>
+											<li><a href="movie.html">喜剧</a></li>
+											<li><a href="movie.html">浪漫</a></li>
+											<li><a href="movie.html">恐怖</a></li>
+										</ul>
+									</div>
+								</div>
+								<a class="close" href="#close">×</a>
+							</div>
+							<!-- /search popup -->
+							<!--/search-right-->
+						</div>
+
+
+					</div>
+					<!-- toggle switch for light and dark theme -->
+					<div class="mobile-position">
+						<nav class="navigation">
+							<div class="theme-switch-wrapper">
+								<label class="theme-switch" for="checkbox">
+									<input type="checkbox" id="checkbox">
+									<div class="mode-container">
+										<i class="gg-sun"></i>
+										<i class="gg-moon"></i>
+									</div>
+								</label>
+							</div>
+						</nav>
+					</div>
+					<!-- //toggle switch for light and dark theme -->
+					<div class="user" id="user">
+						
+					</div>
+				</div>
+			</nav>
+			<!--//nav-->
+		</header>
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" id="myModalLabel">
+							是否要退出
+						</h4>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">否
+						</button>
+						<button type="button" class="btn btn-primary" onclick="exit()">
+							是
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="w3l-breadcrumbs">
+			<nav id="breadcrumbs" class="breadcrumbs">
+				<div class="container page-wrapper">
+					<a href="index.html">首页</a> » <span class="breadcrumb_last" aria-current="page">选择影院</span>
+				</div>
+			</nav>
+		</div>
+		<!--/tabs-->
+		<!-- //tabs-->
+
+
+		<section>
+			<div class="main" id="main">
+				<div class="top2">
+					<div id="container" class="cinema-map"></div>
+					<script type="text/javascript" src="http://api.map.baidu.com/api?v=1.3"></script>
+					<script type="text/javascript">
+						var map = new BMap.Map("container"); //设置底图
+						map.centerAndZoom("福建", 20); //初始化地址，查询的地址所在市
+						map.enableScrollWheelZoom(); //启用滚轮放大缩小，默认禁用
+						map.enableContinuousZoom(); //启用地图惯性拖拽，默认禁用
+
+						var localSearch = new BMap.LocalSearch(map);
+						localSearch.enableAutoViewport(); //允许自动调节窗体大小
+						function searchByStationName() {
+							map.clearOverlays(); //清空原来的标注
+							var loca = "集美万达影城"; //查询的详细地址
+							localSearch.setSearchCompleteCallback(function(searchResult) {
+								var poi = searchResult.getPoi(0);
+								map.centerAndZoom(poi.point, 20);
+								var marker = new BMap.Marker(new BMap.Point(poi.point.lng, poi.point.lat)); // 创建标注，为要查询的地方对应的经纬度
+								map.addOverlay(marker);
+								// var content = keyword;
+								var infoWindow = new BMap.InfoWindow("<p style='font-size:14px;'>" + content + "</p>");
+								marker.addEventListener("click", function() {
+									this.openInfoWindow(infoWindow);
+								});
+								marker.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+							});
+							localSearch.search(loca);
+						}
+						searchByStationName();
+					</script>
+					<div class="swiper" id="swiper">
+
+					</div>
+				</div>
+				<div class="cinema-top mycinema" id="mycinema">
+					<p style="position: relative;bottom: -5px;left: 500px;">以下场次可供选择</p>
+					<div class="filter-select"></div>
+				</div>
+				<div class="cinema" id="eee"></div>
+			</div>
+		</section>
+
+
+		<!-- footer-66 -->
+		<footer class="w3l-footer">
+			<section class="footer-inner-main">
+				<div class="footer-hny-grids py-5">
+					<div class="container py-lg-4">
+						<div class="text-txt">
+							<div class="right-side">
+								<div class="row footer-about">
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner1.jpg"
+												alt=""></a>
+									</div>
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner2.jpg"
+												alt=""></a>
+									</div>
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner3.jpg"
+												alt=""></a>
+									</div>
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner4.jpg"
+												alt=""></a>
+									</div>
+								</div>
+								<div class="row footer-links">
+
+
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Movies</h6>
+										<ul>
+											<li><a href="#">Movies</a></li>
+											<li><a href="#">Videos</a></li>
+											<li><a href="#">English Movies</a></li>
+											<li><a href="#">Tailor</a></li>
+											<li><a href="#">Upcoming Movies</a></li>
+											<li><a href="contact.html">Contact Us</a></li>
+										</ul>
+									</div>
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Information</h6>
+										<ul>
+											<li><a href="index.html">Home</a> </li>
+											<li><a href="movie.html">电影</a> </li>
+											<li><a href="#">Tv Series</a> </li>
+											<li><a href="#">Blogs</a> </li>
+											<li><a href="#">Login</a></li>
+											<li><a href="contact.html">Contact</a></li>
+										</ul>
+										<span val="" id="hiddenmid" display="hidden"></span>
+										<span val="" id="movie" display="hidden"></span>
+										<span val="" id="dates" display="hidden"></span>
+									</div>
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Locations</h6>
+										<ul>
+											<li><a href="genre.html">Asia</a></li>
+											<li><a href="genre.html">France</a></li>
+											<li><a href="genre.html">Taiwan</a></li>
+											<li><a href="genre.html">United States</a></li>
+											<li><a href="genre.html">Korea</a></li>
+											<li><a href="genre.html">United Kingdom</a></li>
+										</ul>
+									</div>
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Newsletter</h6>
+										<form action="#" class="subscribe mb-3" method="post">
+											<input type="email" name="email" placeholder="Your Email Address"
+												required="">
+											<button><span class="fa fa-envelope-o"></span></button>
+										</form>
+										<p>Enter your email and receive the latest news, updates and special offers from
+											us.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				</div>
+				<div class="below-section">
+					<div class="container">
+						<div class="copyright-footer">
+							<div class="columns text-lg-left">
+								<p>Copyright &copy; 2020.Company name All rights reserved.<a target="_blank"
+										href="http://sc.chinaz.com/moban/">&#x7F51;&#x9875;&#x6A21;&#x677F;</a></p>
+							</div>
+
+							<ul class="social text-lg-right">
+								<li><a href="#facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a>
+								</li>
+								<li><a href="#linkedin"><span class="fa fa-linkedin" aria-hidden="true"></span></a>
+								</li>
+								<li><a href="#twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a>
+								</li>
+								<li><a href="#google"><span class="fa fa-google-plus" aria-hidden="true"></span></a>
+								</li>
+
+							</ul>
+						</div>
+					</div>
+				</div>
+				<!-- copyright -->
+				<!-- move top -->
+				<button onclick="topFunction()" id="movetop" title="Go to top">
+					<span class="fa fa-arrow-up" aria-hidden="true"></span>
+				</button>
+				<script>
+					// When the user scrolls down 20px from the top of the document, show the button
+					window.onscroll = function() {
+						scrollFunction()
+					};
+
+					function scrollFunction() {
+						if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+							document.getElementById("movetop").style.display = "block";
+						} else {
+							document.getElementById("movetop").style.display = "none";
+						}
+					}
+
+					// When the user clicks on the button, scroll to the top of the document
+					function topFunction() {
+						document.body.scrollTop = 0;
+						document.documentElement.scrollTop = 0;
+					}
+				</script>
+				<!-- /move top -->
+
+			</section>
+		</footer>
+		<!--//footer-66 -->
+	</body>
+
+</html>
+<!-- responsive tabs -->
+<script src="assets/js/jquery-1.9.1.min.js"></script>
+<script src="assets/js/easyResponsiveTabs.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+		//Horizontal Tab
+		$('#parentHorizontalTab').easyResponsiveTabs({
+			type: 'default', //Types: default, vertical, accordion
+			width: 'auto', //auto or any width like 600px
+			fit: true, // 100% fit in a container
+			tabidentify: 'hor_1', // The tab groups identifier
+			activate: function(event) { // Callback function if tab is switched
+				var $tab = $(this);
+				var $info = $('#nested-tabInfo');
+				var $name = $('span', $info);
+				$name.text($tab.text());
+				$info.show();
+			}
+		});
+	});
+</script>
+<!-- //responsive tabs -->
+<!--/theme-change-->
+<script src="assets/js/theme-change.js"></script>
+<!-- //theme-change-->
+<script src="assets/js/owl.carousel.js"></script>
+<!-- script for banner slider-->
+<script>
+	$(document).ready(function() {
+		$('.owl-one').owlCarousel({
+			stagePadding: 280,
+			loop: true,
+			margin: 20,
+			nav: true,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 1,
+					stagePadding: 40,
+					nav: false
+				},
+				480: {
+					items: 1,
+					stagePadding: 60,
+					nav: true
+				},
+				667: {
+					items: 1,
+					stagePadding: 80,
+					nav: true
+				},
+				1000: {
+					items: 1,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //script -->
+<script>
+	$(document).ready(function() {
+		$('.owl-three').owlCarousel({
+			loop: true,
+			margin: 20,
+			nav: false,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 2,
+					nav: false
+				},
+				480: {
+					items: 2,
+					nav: true
+				},
+				667: {
+					items: 3,
+					nav: true
+				},
+				1000: {
+					items: 5,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //script -->
+<!-- /mid-script -->
+<script>
+	$(document).ready(function() {
+		$('.owl-mid').owlCarousel({
+			loop: true,
+			margin: 0,
+			nav: false,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 1,
+					nav: false
+				},
+				480: {
+					items: 1,
+					nav: false
+				},
+				667: {
+					items: 1,
+					nav: true
+				},
+				1000: {
+					items: 1,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //mid-script -->
+
+<!-- script for owlcarousel -->
+<!-- Template JavaScript -->
+<script src="assets/js/jquery.magnific-popup.min.js"></script>
+<script>
+	$(document).ready(function() {
+		$('.popup-with-zoom-anim').magnificPopup({
+			type: 'inline',
+
+			fixedContentPos: false,
+			fixedBgPos: true,
+
+			overflowY: 'auto',
+
+			closeBtnInside: true,
+			preloader: false,
+
+			midClick: true,
+			removalDelay: 300,
+			mainClass: 'my-mfp-zoom-in'
+		});
+
+		$('.popup-with-move-anim').magnificPopup({
+			type: 'inline',
+
+			fixedContentPos: false,
+			fixedBgPos: true,
+
+			overflowY: 'auto',
+
+			closeBtnInside: true,
+			preloader: false,
+
+			midClick: true,
+			removalDelay: 300,
+			mainClass: 'my-mfp-slide-bottom'
+		});
+	});
+</script>
+<!--//-->
+<!-- disable body scroll which navbar is in active -->
+<script>
+	$(function() {
+		$('.navbar-toggler').click(function() {
+			$('body').toggleClass('noscroll');
+		})
+	});
+</script>
+<!-- disable body scroll which navbar is in active -->
+
+<!--/MENU-JS-->
+<script>
+	$(window).on("scroll", function() {
+		var scroll = $(window).scrollTop();
+
+		if (scroll >= 80) {
+			$("#site-header").addClass("nav-fixed");
+		} else {
+			$("#site-header").removeClass("nav-fixed");
+		}
+	});
+
+	//Main navigation Active Class Add Remove
+	$(".navbar-toggler").on("click", function() {
+		$("header").toggleClass("active");
+	});
+	$(document).on("ready", function() {
+		if ($(window).width() > 991) {
+			$("header").removeClass("active");
+		}
+		$(window).on("resize", function() {
+			if ($(window).width() > 991) {
+				$("header").removeClass("active");
+			}
+		});
+	});
+</script>
+<script src="assets/js/bootstrap.min.js"></script>

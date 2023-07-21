@@ -1,0 +1,741 @@
+
+<!doctype html>
+<html lang="zxx">
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery-2.1.1.min.js"></script>
+<script>
+	var value = sessionStorage.getItem('getLoginInfo')
+	var loginInfo = window.JSON.parse(value)
+	var token = sessionStorage.getItem('token')
+	var isLogin = sessionStorage.getItem('isLogin')
+	if(isLogin==null){
+		var isLogin = false
+	}
+	console.log(isLogin)
+	$(document).ready(function() {
+			console.log(isLogin)
+			if(isLogin==false){
+				var str =
+						'<a href="login.html">'+
+							'<img style="height: 40px;width: 40px;" src="assets/images/未登录-头像.png">'+
+						'</a>'+
+						'<a href="login.html">登录</a>';
+						$("#user").append(str)
+			}else{
+				var str =
+						'<a>'+
+							'<img style="height: 40px;width: 40px;" src='+loginInfo.avatar+'>'+
+						'</a>'+
+						'<button data-toggle="modal" data-target="#myModal">退出</button>'
+					$("#user").append(str)
+				}
+		})
+		function exit(){
+			sessionStorage.clear()
+			window.location.href="index.html"
+		}
+</script>
+<script>
+	$(document).ready(function() {
+		var token = sessionStorage.getItem('token')
+		console.log("ajax_movie");
+		$.ajax({
+			url: "http://www.zhelovechun.top:8081/tpm/movie",
+			dataType: "json",
+			type: "get",
+			xhrFields: {
+				withCredentials: true
+			},
+			beforeSend: function(request) {
+				request.setRequestHeader("Authorization", token);
+			},
+			crossDomain: true,
+			success: function (data) {
+				console.log(data);
+				for(var i = 0;i<data.datas.length;i++){
+					if(data.datas[i].status>0){
+						var str =
+								'<div class="item vhny-grid">'+
+									'<div class="box16">'+
+										'<a href="about.html">'+
+											'<figure>'+
+												'<img class="img-fluid" src='+data.datas[i].img+' alt="">'+
+											'</figure>'+
+											'<div class="box-content">'+
+											'	<h3 class="title" onclick="aboutMovie1('+data.datas[i].mid+')">'+data.datas[i].mname+'</h3>'+
+											'</div>'+
+											'<span class="fa fa-play video-icon" aria-hidden="true" onclick="aboutMovie1('+data.datas[i].mid+')"></span>'+
+										'</a>'+
+									'</div>'+
+								'</div>';				
+						$("#movie").append(str);
+				}
+				$('#mid1').val(data)
+				}
+				}                                                                    
+			})
+		});
+	</script>
+	
+	<script>
+		$(document).ready(function() {
+			console.log("ajax_movie");
+			$.ajax({
+				url: "http://www.zhelovechun.top:8081/tpm/movie",
+				dataType: "json",
+				type: "get",
+				xhrFields: {
+					withCredentials: true
+				},
+				beforeSend: function(request) {
+					request.setRequestHeader("Authorization",
+						'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhdXRoMCIsImV4cCI6MTY1NTg5OTcwNiwidXNlcm5hbWUiOiJ6aGFuZ3NhbjMifQ.UF_fJAjfKey81tgryj9fAlv27LnHrNL_FraERoAnrhQ'
+						);
+				},
+				crossDomain: true,
+				success: function(data) {
+					for (var i = 0; i < data.datas.length; i++) {
+						if (data.datas[i].status < 0 ) {
+							var str =
+								'<div class="item vhny-grid" style="height:450px; width:210px">'+
+									'<div class="box16 mb-0">'+
+										'<a href="about.html">'+
+											'<figure>'+
+												'<img class="img-fluid" style="height:300px;width:214px" src='+data.datas[i].img+' alt="">'+
+											'</figure>'+
+											'<div class="box-content"onclick="aboutMovie2('+data.datas[i].mid+')">'+
+												'<h4> <span class="post"><span class="fa fa-clock-o"  onclick="aboutMovie2('+data.datas[i].mid+')"> </span>'+data.datas[i].duration+'分钟'+
+												'	</span>'+
+											'	</h4>'+
+											'</div>'+
+										'	<span class="fa fa-play video-icon" aria-hidden="true" onclick="aboutMovie2('+data.datas[i].mid+')"></span>'+
+										'</a>'+
+									'</div>'+
+									'<h3> <a class="title-gd" href="about.html" style="font-size:15px;" onclick="aboutMovie2('+data.datas[i].mid+')">'+data.datas[i].mname+'</a></h3>'+
+									'<p>'+data.datas[i].label+'</p>'+
+									'<div class="button-center text-center mt-4">'+
+									'	<a href="about.html" class="btn watch-button" onclick="aboutMovie2('+data.datas[i].mid+')">购票</a>'+
+									'</div>'+
+								'</div>';
+								$("#ccc").append(str);
+						}
+					}
+					console.log(data);
+					$('#mid2').val(data)
+				}
+			})
+		});
+	</script>
+	<script>
+	function aboutMovie1(mid){
+		var movies = $('#mid1').val().datas
+		for(var i = 0;i<movies.length;i++){
+			if(movies[i].mid==mid){
+				var value = window.JSON.stringify(movies[i])
+				console.log(value)
+				sessionStorage.setItem('mitem',value)
+			}
+		}
+	}
+	function aboutMovie2(mid){
+		var movies = $('#mid2').val().datas
+		for(var i = 0;i<movies.length;i++){
+			if(movies[i].mid==mid){
+				var value = window.JSON.stringify(movies[i])
+				console.log(value)
+				sessionStorage.setItem('mitem',value)
+			}
+		}
+	}
+	</script>
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>Home</title>
+	<!-- Template CSS -->
+	<link rel="stylesheet" href="assets/css/style-starter.css">
+	<!-- Template CSS -->
+	<link href="http://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap"
+		rel="stylesheet">
+	<!-- Template CSS -->
+</head>
+
+<body>
+
+	<!-- header -->
+	<header id="site-header" class="w3l-header fixed-top">
+		<!--/nav-->
+		<nav class="navbar navbar-expand-lg navbar-light fill px-lg-0 py-0 px-3">
+			<div class="container">
+				<h1><a class="navbar-brand" href="index.html"><span class="fa fa-play icon-log"
+							aria-hidden="true"></span>
+						淘票猫</a></h1>
+				<!-- if logo is image enable this   
+						<a class="navbar-brand" href="#index.html">
+							<img src="image-path" alt="Your logo" title="Your logo" style="height:35px;" />
+						</a> -->
+				<button class="navbar-toggler collapsed" type="button" data-toggle="collapse"
+					data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+					aria-label="Toggle navigation">
+					<!-- <span class="navbar-toggler-icon"></span> -->
+					<span class="fa icon-expand fa-bars"></span>
+					<span class="fa icon-close fa-times"></span>
+				</button>
+
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+					<ul class="navbar-nav ml-auto">
+						<li class="nav-item active">
+							<a class="nav-link" href="index.html">首页</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="movie.html">电影</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="cinema.html">影院</a>
+						</li>
+						<li class="nav-item">
+							<ul>
+								<div class="mine-dropdown">
+									<a href="#" class="dropbtn">我的</a>
+									<div class="dropdown-content">
+										<a href="modifyuser.html">修改个人信息</a>
+										<a href="modifypassword.html">修改密码</a>
+										<a href="myorder.html">我的订单</a>
+									</div>
+								</div>
+							</ul>
+						</li>
+					</ul>
+
+					<!--/search-right-->
+					<!--/search-right-->
+					<div class="search-right">
+						<a href="#search" class="btn search-hny mr-lg-3 mt-lg-0 mt-4" title="search">搜索 <span
+								class="fa fa-search ml-3" aria-hidden="true"></span></a>
+						<!-- search popup -->
+						<div id="search" class="pop-overlay">
+							<div class="popup">
+								<form action="#" method="post" class="search-box">
+									<input type="search" placeholder="请输入电影的名称" name="search"
+										required="required" autofocus="">
+									<button type="submit" class="btn"><span class="fa fa-search"
+											aria-hidden="true"></span></button>
+								</form>
+								<div class="browse-items">
+									<h3 class="hny-title two mt-md-5 mt-4">标签浏览:</h3>
+									<ul class="search-items">
+										<li><a href="movie.html">动作</a></li>
+										<li><a href="movie.html">戏剧</a></li>
+										<li><a href="movie.html">家庭</a></li>
+										<li><a href="movie.html">惊悚</a></li>
+										<li><a href="movie.html">喜剧</a></li>
+										<li><a href="movie.html">浪漫</a></li>
+										<li><a href="movie.html">恐怖</a></li>
+									</ul>
+								</div>
+							</div>
+							<a class="close" href="#close">×</a>
+						</div>
+						<!-- /search popup -->
+						<!--/search-right-->
+					</div>
+
+
+				</div>
+				<!-- toggle switch for light and dark theme -->
+				<div class="mobile-position">
+					<nav class="navigation">
+						<div class="theme-switch-wrapper">
+							<label class="theme-switch" for="checkbox">
+								<input type="checkbox" id="checkbox">
+								<div class="mode-container">
+									<i class="gg-sun"></i>
+									<i class="gg-moon"></i>
+								</div>
+							</label>
+						</div>
+					</nav>
+				</div>
+				<!-- //toggle switch for light and dark theme -->
+				<div class="user" id="user">
+					
+				</div>
+			</div>
+		</nav>
+		<!--//nav-->
+	</header>
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="myModalLabel">
+						是否要退出
+					</h4>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">否
+					</button>
+					<button type="button" class="btn btn-primary" onclick="exit()">
+						是
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<section class="w3l-main-slider position-relative" id="home">
+		<div class="companies20-content">
+			<div class="owl-one owl-carousel owl-theme">
+				<div class="item">
+					<li>
+						<div class="slider-info banner-view bg bg2">
+							<div class="banner-info">
+								<h3>最新电影预告</h3>
+								<p>《复仇者联盟4：终局之战》<span class="over-para"> 讲述了复仇者联盟在剩余盟友的帮助下再一次集结，逆转过去，重新创造希望的故事。</span></p>
+								<a href="#small-dialog1" class="popup-with-zoom-anim play-view1">
+									<span class="video-play-icon">
+										<span class="fa fa-play"></span>
+									</span>
+									<h6>电影信息</h6>
+								</a>
+								<!-- dialog itself, mfp-hide class is required to make dialog hidden -->
+								<div id="small-dialog1" class="zoom-anim-dialog mfp-hide">
+									<iframe src="" allow="autoplay; fullscreen"
+										allowfullscreen=""></iframe>
+								</div>
+							</div>
+						</div>
+					</li>
+				</div>
+				<div class="item">
+					<li>
+						<div class="slider-info  banner-view banner-top1 bg bg2">
+							<div class="banner-info">
+								<h3>最新电影预告</h3>
+								<p>《冰雪奇缘》<span class="over-para">讲述小国阿伦黛尔因一个魔咒永远地被冰天雪地覆盖，为了寻回夏天，安娜公主和山民克里斯托夫以及他的驯鹿搭档组队出发，展开一段拯救王国的历险。</span></p>
+								<a href="#small-dialog2" class="popup-with-zoom-anim play-view1">
+									<span class="video-play-icon">
+										<span class="fa fa-play"></span>
+									</span>
+									<h6>电影信息</h6>
+								</a>
+								<!-- dialog itself, mfp-hide class is required to make dialog hidden -->
+								<div id="small-dialog2" class="zoom-anim-dialog mfp-hide">
+									<iframe src="" allow="autoplay; fullscreen"
+										allowfullscreen=""></iframe>
+								</div>
+							</div>
+						</div>
+					</li>
+				</div>
+				<div class="item">
+					<li>
+						<div class="slider-info banner-view banner-top2 bg bg2">
+							<div class="banner-info">
+								<h3>最新电影预告</h3>
+								<p>《小丑》<span class="over-para">讲述了20世纪80年代生活陷入困境的喜剧演员亚瑟渐渐走向精神崩溃，在哥谭市开始了疯狂的犯罪生涯，最终成为了蝙蝠侠的宿敌的故事</span></p>
+								<a href="#small-dialog3" class="popup-with-zoom-anim play-view1">
+									<span class="video-play-icon">
+										<span class="fa fa-play"></span>
+									</span>
+									<h6>电影信息</h6>
+								</a>
+								<!-- dialog itself, mfp-hide class is required to make dialog hidden -->
+								<div id="small-dialog3" class="zoom-anim-dialog mfp-hide">
+									<iframe src="" allow="autoplay; fullscreen"
+										allowfullscreen=""></iframe>
+								</div>
+							</div>
+						</div>
+					</li>
+				</div>
+				<div class="item">
+					<li>
+						<div class="slider-info banner-view banner-top3 bg bg2">
+							<div class="banner-info">
+								<h3>最新电影预告</h3>
+								<p>《阿拉丁》<span class="over-para">讲述了善良的穷小子阿拉丁和勇敢的茉莉公主浪漫邂逅，在可以满足主人三个愿望的神灯精灵帮助下，共同踏上寻找真爱和自我的魔幻之旅的故事。</span></p>
+								<a href="#small-dialog4" class="popup-with-zoom-anim play-view1">
+									<span class="video-play-icon">
+										<span class="fa fa-play"></span>
+									</span>
+									<h6>电影信息</h6>
+								</a>
+								<!-- dialog itself, mfp-hide class is required to make dialog hidden -->
+								<div id="small-dialog4" class="zoom-anim-dialog mfp-hide">
+									<iframe src="" allow="autoplay; fullscreen"
+										allowfullscreen=""></iframe>
+								</div>
+							</div>
+						</div>
+					</li>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- //banner-slider-->
+	<!-- main-slider -->
+	<!--grids-sec1-->
+	<section class="w3l-grids">
+		<div class="grids-main py-5">
+			<div class="container py-lg-3">
+				<div class="headerhny-title">
+					<div class="w3l-title-grids">
+						<div class="headerhny-left">
+							<h3 class="hny-title">热映电影</h3>
+						</div>
+						<div class="headerhny-right text-lg-right">
+							<h4><a class="show-title" href="movie.html">所有电影</a></h4>
+						</div>
+					</div>
+				</div>
+				<div class="w3l-populohny-grids" id="movie">
+					
+				</div>
+			</div>
+		</div>
+	</section>
+	<!--//grids-sec1-->
+	<!--grids-sec2-->
+	<section class="w3l-grids">
+		<div class="grids-main py-5">
+			<div class="container py-lg-3">
+				<div class="headerhny-title">
+					<div class="w3l-title-grids">
+						<div class="headerhny-left">
+							<h3 class="hny-title">即将上映</h3>
+						</div>
+						<div class="headerhny-right text-lg-right">
+							<h4><a class="show-title" href="movie.html">所有电影</a></h4>
+						</div>
+					</div>
+				</div>
+				<div class="w3l-populohny-grids" id="ccc">
+					
+				</div>
+			</div>
+		</div>
+	</section>
+	<footer class="w3l-footer">
+		<section class="footer-inner-main">
+			<div class="footer-hny-grids py-5">
+				<div class="container py-lg-4">
+					<div class="text-txt">
+						<div class="right-side">
+							<div class="row footer-links">
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Movies</h6>
+									<ul>
+										<li><a href="#">Movies</a></li>
+										<li><a href="#">Videos</a></li>
+										<li><a href="#">English Movies</a></li>
+										<li><a href="#">Tailor</a></li>
+										<li><a href="#">Upcoming Movies</a></li>
+										<li><a href="contact.html">Contact Us</a></li>
+									</ul>
+								</div>
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Information</h6>
+									<ul>
+										<li><a href="index.html">Home</a> </li>
+										<li><a href="classify.html">Classify</a> </li>
+										<li><a href="#">Tv Series</a> </li>
+										<li><a href="#">Blogs</a> </li>
+										<li><a href="#">Login</a></li>
+										<li><a href="contact.html">Contact</a></li>
+									</ul>
+									<span val="" id="mid1" display="hidden"></span>
+									<span val="" id="mid2" display="hidden"></span>
+								</div>
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Locations</h6>
+									<ul>
+										<li><a href="genre.html">Asia</a></li>
+										<li><a href="genre.html">France</a></li>
+										<li><a href="genre.html">Taiwan</a></li>
+										<li><a href="genre.html">United States</a></li>
+										<li><a href="genre.html">Korea</a></li>
+										<li><a href="genre.html">United Kingdom</a></li>
+									</ul>
+								</div>
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Newsletter</h6>
+									<form action="#" class="subscribe mb-3" method="post">
+										<input type="email" name="email" placeholder="Your Email Address" required="">
+										<button><span class="fa fa-envelope-o"></span></button>
+									</form>
+									<p>Enter your email and receive the latest news, updates and special offers from us.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			</div>
+			<div class="below-section">
+				<div class="container">
+					<div class="copyright-footer">
+						<div class="columns text-lg-left">
+							<p>Copyright &copy; 2020.Company name All rights reserved.<a target="_blank" href="http://sc.chinaz.com/moban/">&#x7F51;&#x9875;&#x6A21;&#x677F;</a></p>
+						</div>
+
+						<ul class="social text-lg-right">
+							<li><a href="#facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a>
+							</li>
+							<li><a href="#linkedin"><span class="fa fa-linkedin" aria-hidden="true"></span></a>
+							</li>
+							<li><a href="#twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a>
+							</li>
+							<li><a href="#google"><span class="fa fa-google-plus" aria-hidden="true"></span></a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				
+			</div>
+			<!-- copyright -->
+			<!-- move top -->
+			<button onclick="topFunction()" id="movetop" title="Go to top">
+				<span class="fa fa-arrow-up" aria-hidden="true"></span>
+			</button>
+			<script>
+				// When the user scrolls down 20px from the top of the document, show the button
+				window.onscroll = function () {
+					scrollFunction()
+				};
+
+				function scrollFunction() {
+					if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+						document.getElementById("movetop").style.display = "block";
+					} else {
+						document.getElementById("movetop").style.display = "none";
+					}
+				}
+
+				// When the user clicks on the button, scroll to the top of the document
+				function topFunction() {
+					document.body.scrollTop = 0;
+					document.documentElement.scrollTop = 0;
+				}
+			</script>
+			<!-- /move top -->
+
+		</section>
+	</footer>
+	<!--//footer-66 -->
+</body>
+
+</html>
+<!-- responsive tabs -->
+<script src="assets/js/jquery-1.9.1.min.js"></script>
+  <script src="assets/js/easyResponsiveTabs.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      //Horizontal Tab
+      $('#parentHorizontalTab').easyResponsiveTabs({
+        type: 'default', //Types: default, vertical, accordion
+        width: 'auto', //auto or any width like 600px
+        fit: true, // 100% fit in a container
+        tabidentify: 'hor_1', // The tab groups identifier
+        activate: function (event) { // Callback function if tab is switched
+          var $tab = $(this);
+          var $info = $('#nested-tabInfo');
+          var $name = $('span', $info);
+          $name.text($tab.text());
+          $info.show();
+        }
+      });
+    });
+  </script>  
+<!-- //responsive tabs -->
+<!--/theme-change-->
+<script src="assets/js/theme-change.js"></script>
+<!-- //theme-change-->
+<script src="assets/js/owl.carousel.js"></script>
+<!-- script for banner slider-->
+<script>
+	$(document).ready(function () {
+		$('.owl-one').owlCarousel({
+			stagePadding:280,
+			loop: true,
+			margin: 20,
+			nav: true,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 1,
+					stagePadding:40,
+					nav: false
+				},
+				480: {
+					items: 1,
+					stagePadding:60,
+					nav: true
+				},
+				667: {
+					items: 1,
+					stagePadding:80,
+					nav: true
+				},
+				1000: {
+					items: 1,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //script -->
+<script>
+	$(document).ready(function () {
+		$('.owl-three').owlCarousel({
+			loop: true,
+			margin: 20,
+			nav: false,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 2,
+					nav: false
+				},
+				480: {
+					items: 2,
+					nav: true
+				},
+				667: {
+					items: 3,
+					nav: true
+				},
+				1000: {
+					items: 5,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //script -->
+<!-- /mid-script -->
+<script>
+	$(document).ready(function () {
+		$('.owl-mid').owlCarousel({
+			loop: true,
+			margin: 0,
+			nav: false,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 1,
+					nav: false
+				},
+				480: {
+					items: 1,
+					nav: false
+				},
+				667: {
+					items: 1,
+					nav: true
+				},
+				1000: {
+					items: 1,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //mid-script -->
+
+<!-- script for owlcarousel -->
+<!-- Template JavaScript -->
+<script src="assets/js/jquery.magnific-popup.min.js"></script>
+<script>
+	$(document).ready(function () {
+		$('.popup-with-zoom-anim').magnificPopup({
+			type: 'inline',
+
+			fixedContentPos: false,
+			fixedBgPos: true,
+
+			overflowY: 'auto',
+
+			closeBtnInside: true,
+			preloader: false,
+
+			midClick: true,
+			removalDelay: 300,
+			mainClass: 'my-mfp-zoom-in'
+		});
+
+		$('.popup-with-move-anim').magnificPopup({
+			type: 'inline',
+
+			fixedContentPos: false,
+			fixedBgPos: true,
+
+			overflowY: 'auto',
+
+			closeBtnInside: true,
+			preloader: false,
+
+			midClick: true,
+			removalDelay: 300,
+			mainClass: 'my-mfp-slide-bottom'
+		});
+	});
+</script>
+<!--//-->
+<!-- disable body scroll which navbar is in active -->
+<script>
+	$(function () {
+		$('.navbar-toggler').click(function () {
+			$('body').toggleClass('noscroll');
+		})
+	});
+</script>
+<!-- disable body scroll which navbar is in active -->
+
+<!--/MENU-JS-->
+<script>
+	$(window).on("scroll", function () {
+		var scroll = $(window).scrollTop();
+
+		if (scroll >= 80) {
+			$("#site-header").addClass("nav-fixed");
+		} else {
+			$("#site-header").removeClass("nav-fixed");
+		}
+	});
+
+	//Main navigation Active Class Add Remove
+	$(".navbar-toggler").on("click", function () {
+		$("header").toggleClass("active");
+	});
+	$(document).on("ready", function () {
+		if ($(window).width() > 991) {
+			$("header").removeClass("active");
+		}
+		$(window).on("resize", function () {
+			if ($(window).width() > 991) {
+				$("header").removeClass("active");
+			}
+		});
+	});
+</script>
+<!--//MENU-JS-->
+
+<script src="assets/js/bootstrap.min.js"></script>

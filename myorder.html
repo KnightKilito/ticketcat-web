@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="zxx">
+	<script src="assets/js/jquery.min.js"></script>
+	<script src="assets/js/jquery-2.1.1.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+	var value = sessionStorage.getItem('getLoginInfo')
+	var loginInfo = window.JSON.parse(value)
+	var token = sessionStorage.getItem('token')
+	var isLogin = sessionStorage.getItem('isLogin')
+	if(isLogin==null){
+		var isLogin = false
+	}
+	if(isLogin == false){
+		alert("请登录！！！")
+		window.location.href='login.html'
+	}else{
+	$(document).ready(function() {
+			console.log(isLogin)
+			if(isLogin==false){
+				var str =
+						'<a href="login.html">'+
+							'<img style="height: 40px;width: 40px;" src="assets/images/未登录-头像.png">'+
+						'</a>'+
+						'<a href="login.html">登录</a>';
+						$("#user").append(str)
+			}else{
+				var str =
+						'<a>'+
+							'<img style="height: 40px;width: 40px;" src='+loginInfo.avatar+'>'+
+						'</a>'+
+						'<button data-toggle="modal" data-target="#myModal">退出</button>'
+					$("#user").append(str)
+				}
+		})
+		}
+		function exit(){
+			sessionStorage.clear()
+			window.location.href="index.html"
+		}
+</script>
+<script>
+	$(document).ready(function(){
+			var uid = loginInfo.uid
+			var url = 'http://www.zhelovechun.top:8081/tpm/ticket/getTicket/'+uid
+			$.ajax({
+				url,
+				dataType: "json",
+				type: "get",
+				xhrFields: {
+					withCredentials: true
+				},
+				crossDomain: true,
+				success: function(data) {
+					console.log(data)
+					for(var i = 0;i<data.datas.length;i++){
+						if(data.datas[i].status==3){
+							var str =
+									'<div class="work-box3">'+
+										'<div class="work-box-left">'+
+											'<img src='+data.datas[i].img+' />'+
+										'</div>'+
+										'<div class="work-box-center">'+
+											'<div class="work-job">'+
+											'<h3 class="section-20px-montserrat" style="color:black;"><span class="order-text">影片:</span>'+data.datas[i].mname+'</h3>'+
+											'<div style="color:black;"><span class="order-text">观看时间:</span>'+data.datas[i].date+'&nbsp;&nbsp;'+data.datas[i].starttime+'-'+data.datas[i].outtime+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">影院地址:</span>'+data.datas[i].address+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">您购买的座位为:</span>'+data.datas[i].sessionseats+'</div>'+
+											'<div style="color:red; font-size:30px"><span class="order-text">实付:￥</span>'+data.datas[i].tmoney+'</div>'+
+											'<div>已评价</div>'+
+											'</div>'+
+										'</div>'+
+										'<div class="work-box-right">'+
+										'	<button class="mydiv" onclick="deleteOrder('+i+')">删除订单</button>'+
+										'</div>'+
+									'</div>';
+							$("#orders").append(str)
+						}else if(data.datas[i].status==2){
+							var str =
+									'<div class="work-box2">'+
+										'<div class="work-box-left">'+
+											'<img src='+data.datas[i].img+' />'+
+										'</div>'+
+										'<div class="work-box-center">'+
+											'<div class="work-job">'+
+											'<h3 class="section-20px-montserrat" style="color:black;"><span class="order-text">影片:</span>'+data.datas[i].mname+'</h3>'+
+											'<div style="color:black;"><span class="order-text">观看时间:</span>'+data.datas[i].date+'&nbsp;&nbsp;'+data.datas[i].starttime+'-'+data.datas[i].outtime+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">影院地址:</span>'+data.datas[i].address+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">您购买的座位为:</span>'+data.datas[i].sessionseats+'</div>'+
+											'<div style="color:red;font-size:30px"><span class="order-text">实付:￥</span>'+data.datas[i].tmoney+'</div>'+
+											'<div style="color:yellow">未评价</div>'+
+											'<button data-toggle="modal" data-target="#comment" onclick="getTid('+data.datas[i].tid+')">评分</button>'+
+											'</div>'+
+										'</div>'+
+										'<div class="work-box-right">'+
+										'	<button class="mydiv" onclick="deleteOrder('+i+')">删除订单</button>'+
+										'</div>'+
+									'</div>';
+							$("#orders").append(str)
+						}else if(data.datas[i].status==1){
+							var str =
+									'<div class="work-box1">'+
+										'<div class="work-box-left">'+
+											'<img src='+data.datas[i].img+' />'+
+										'</div>'+
+										'<div class="work-box-center">'+
+											'<div class="work-job">'+
+											'<h3 class="section-20px-montserrat" style="color:black;"><span class="order-text">影片:</span>'+data.datas[i].mname+'</h3>'+
+											'<div style="color:black;"><span class="order-text">观看时间:</span>'+data.datas[i].date+'&nbsp;&nbsp;'+data.datas[i].starttime+'-'+data.datas[i].outtime+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">影院地址:</span>'+data.datas[i].address+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">您购买的座位为:</span>'+data.datas[i].sessionseats+'</div>'+
+											'<div style="color:red; font-size:30px"><span class="order-text">实付:￥</span>'+data.datas[i].tmoney+'</div>'+
+											'<div style="color:green">已出票</div>'+
+											'</div>'+
+										'</div>'+
+										'<div class="work-box-right">'+
+										'	<button class="mydiv" onclick="deleteOrder('+i+')">删除订单</button>'+
+										'</div>'+
+									'</div>';
+							$("#orders").append(str)
+						}else if(data.datas[i].status==0){
+							var str =
+									'<div class="work-box0">'+
+										'<div class="work-box-left">'+
+											'<img src='+data.datas[i].img+' />'+
+										'</div>'+
+										'<div class="work-box-center">'+
+											'<div class="work-job">'+
+											'<h3 class="section-20px-montserrat" style="color:black;"><span class="order-text">影片:</span>'+data.datas[i].mname+'</h3>'+
+											'<div style="color:black;"><span class="order-text">观看时间:</span>'+data.datas[i].date+'&nbsp;&nbsp;'+data.datas[i].starttime+'-'+data.datas[i].outtime+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black; font-size:17px"><span class="order-text">影院地址:</span>'+data.datas[i].address+'</div>'+
+											'<div class="section-20px-montserrat" style="color:black;"><span class="order-text">您购买的座位为:</span>'+data.datas[i].sessionseats+'</div>'+
+											'<div style="color:red; font-size:30px"><span class="order-text">实付:￥</span>'+data.datas[i].tmoney+'</div>'+
+											'<div style="color:red">待付款</div>'+
+											'</div>'+
+										'</div>'+
+										'<div class="work-box-right">'+
+										'	<button class="mydiv" onclick="deleteOrder('+i+')">删除订单</button>'+
+										'</div>'+
+									'</div>';
+							$("#orders").append(str)
+						}
+					}
+					$("#tid").val(data)
+				}
+			})
+		})
+		function deleteOrder(i){
+			var Order = $("#tid").val().datas
+			var tid = Order[i].tid
+			var url = 'http://www.zhelovechun.top:8081/tpm/ticket/'+tid
+			$.ajax({
+				url,
+				dataType: "json",
+				type:"delete",
+				xhrFields: {
+					withCredentials: true
+				},
+				crossDomain: true,
+				success: function(data) {
+					alert("删除成功")
+					window.location.href='myorder.html'
+				}
+			})
+		}
+		function getTid(id){
+			var tid = id
+			sessionStorage.setItem('tid',tid)
+		}
+		function comment(){
+			var score = $("#score").val()
+			var tid = sessionStorage.getItem('tid')
+			var Order = $("#tid").val().datas
+			var mid = ''
+			for(var i = 0;i < Order.length;i++){
+				if(tid == Order[i].tid){
+					mid = Order[i].mid
+				}
+			}
+			var url='http://www.zhelovechun.top:8081/tpm/moviecomment/'+tid+'/'+mid+'/'+score
+			if(0<score && score<=10){
+			$.ajax({
+				url,
+				dataType: "json",
+				type:"post",
+				xhrFields: {
+					withCredentials: true
+				},
+				crossDomain: true,
+				success: function(data) {
+					alert("评价成功")
+					window.location.href='myorder.html'
+				}
+			})
+			}else{
+				alert("请输入0-10的数")
+			}
+		}
+</script>
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>我的</title>
+	<!-- Template CSS -->
+	<link rel="stylesheet" href="assets/css/style-starter.css">
+	<!-- Template CSS -->
+	<link href="http://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap"
+		rel="stylesheet">
+	<!-- Template CSS -->
+</head>
+<body>
+		<!-- header -->
+		<header id="site-header" class="w3l-header fixed-top" >
+			<!--/nav-->
+			<nav class="navbar navbar-expand-lg navbar-light fill px-lg-0 py-0 px-3">
+				<div class="container">
+					<h1><a class="navbar-brand" href="index.html"><span class="fa fa-play icon-log" aria-hidden="true"></span>淘票猫 </a></h1>
+					<button class="navbar-toggler collapsed" type="button" data-toggle="collapse"
+						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+						aria-label="Toggle navigation">
+						<span class="fa icon-expand fa-bars"></span>
+						<span class="fa icon-close fa-times"></span>
+					</button>
+	
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<ul class="navbar-nav ml-auto">
+							<li class="nav-item">
+								<a class="nav-link" href="index.html">首页</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="movie.html">电影</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="cinema.html">影院</a>
+							</li>
+							
+							<li class="nav-item active">
+								<ul>
+									<div class="mine-dropdown">
+										<a href="#" class="dropbtn" style="color: #DF0E62;">我的</a>
+										<div class="dropdown-content">
+											<a href="modifyuser.html">修改个人信息</a>
+											<a href="modifypassword.html">修改密码</a>
+											<a href="myorder.html" style="color: #DF0E62;">我的订单</a>
+										</div>
+									</div>
+								</ul>
+							</li>
+						</ul>
+	
+						<!--/search-right-->
+						<!--/search-right-->
+						<div class="search-right">
+							<a href="#search" class="btn search-hny mr-lg-3 mt-lg-0 mt-4" title="search">搜索 <span
+									class="fa fa-search ml-3" aria-hidden="true"></span></a>
+							<!-- search popup -->
+							<div id="search" class="pop-overlay">
+								<div class="popup">
+									<form action="#" method="post" class="search-box">
+										<input type="search" placeholder="请输入电影的名称" name="search"
+											required="required" autofocus="">
+										<button type="submit" class="btn"><span class="fa fa-search"
+												aria-hidden="true"></span></button>
+									</form>
+									<div class="browse-items">
+										<h3 class="hny-title two mt-md-5 mt-4">标签浏览:</h3>
+										<ul class="search-items">
+											<li><a href="movie.html">动作</a></li>
+											<li><a href="movie.html">戏剧</a></li>
+											<li><a href="movie.html">家庭</a></li>
+											<li><a href="movie.html">惊悚</a></li>
+											<li><a href="movie.html">喜剧</a></li>
+											<li><a href="movie.html">浪漫</a></li>
+											<li><a href="movie.html">恐怖</a></li>
+										</ul>
+									</div>
+								</div>
+								<a class="close" href="#close">×</a>
+							</div>
+						</div>
+	
+	
+					</div>
+					<div class="mobile-position">
+						<nav class="navigation">
+							<div class="theme-switch-wrapper">
+								<label class="theme-switch" for="checkbox">
+									<input type="checkbox" id="checkbox">
+									<div class="mode-container">
+										<i class="gg-sun"></i>
+										<i class="gg-moon"></i>
+									</div>
+								</label>
+							</div>
+						</nav>
+					</div>
+					<div class="user" id="user">
+						
+					</div>
+				</div>
+			</nav>
+		</header>
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" id="myModalLabel">
+							是否要退出
+						</h4>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">否
+						</button>
+						<button type="button" class="btn btn-primary" onclick="exit()">
+							是
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal fade" id="comment" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" id="myModalLabel">
+							评分
+						</h4>
+					</div>
+					<div class="modal-content">
+						<input type="text" name="score" id="score" val="" placeholder="请输入0-10中的任意数字" />
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">返回
+						</button>
+						<button type="button" class="btn btn-primary" onclick="comment()">
+							是
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	<div class="w3l-breadcrumbs">
+		<nav id="breadcrumbs" class="breadcrumbs">
+			<div class="container page-wrapper">
+			<a href="index.html">首页</a> » <span class="breadcrumb_last" aria-current="page">我的 » 我的订单</span>
+			</div>
+		</nav>
+	</div>
+	  <section class="w3l-contact-1">
+		<div class="contacts-9 py-5">
+		  <div class="container py-lg-4" id="">
+			<div class="headerhny-title text-center">
+				<h3 class="hny-title mb-0">我的订单</h3>
+			</div>
+			<div class="orders" style="min-height: 200px;" id="orders">
+						
+			</div>
+		  </div>
+		</div>
+	  </section>
+	<footer class="w3l-footer">
+		<section class="footer-inner-main">
+			<div class="footer-hny-grids py-5">
+				<div class="container py-lg-4">
+					<div class="text-txt">
+						<div class="right-side">
+							<div class="row footer-links">
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Movies</h6>
+									<ul>
+										<li><a href="#">Movies</a></li>
+										<li><a href="#">Videos</a></li>
+										<li><a href="#">English Movies</a></li>
+										<li><a href="#">Tailor</a></li>
+										<li><a href="#">Upcoming Movies</a></li>
+										<li><a href="contact.html">Contact Us</a></li>
+									</ul>
+									<span val="" id="tid" display="hidden"></span>
+								</div>
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Information</h6>
+									<ul>
+										<li><a href="index.html">Home</a> </li>
+										<li><a href="movie.html">电影</a> </li>
+										<li><a href="#">Tv Series</a> </li>
+										<li><a href="#">Blogs</a> </li>
+										<li><a href="#">Login</a></li>
+										<li><a href="contact.html">Contact</a></li>
+									</ul>
+								</div>
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Locations</h6>
+									<ul>
+										<li><a href="genre.html">Asia</a></li>
+										<li><a href="genre.html">France</a></li>
+										<li><a href="genre.html">Taiwan</a></li>
+										<li><a href="genre.html">United States</a></li>
+										<li><a href="genre.html">Korea</a></li>
+										<li><a href="genre.html">United Kingdom</a></li>
+									</ul>
+								</div>
+								<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+									<h6>Newsletter</h6>
+									<form action="#" class="subscribe mb-3" method="post">
+										<input type="email" name="email" placeholder="Your Email Address" required="">
+										<button><span class="fa fa-envelope-o"></span></button>
+									</form>
+									<p>Enter your email and receive the latest news, updates and special offers from us.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			</div>
+			<div class="below-section">
+				<div class="container">
+					<div class="copyright-footer">
+						<div class="columns text-lg-left">
+							<p>Copyright &copy; 2020.Company name All rights reserved.<a target="_blank" href="http://sc.chinaz.com/moban/">&#x7F51;&#x9875;&#x6A21;&#x677F;</a></p>
+						</div>
+
+						<ul class="social text-lg-right">
+							<li><a href="#facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a>
+							</li>
+							<li><a href="#linkedin"><span class="fa fa-linkedin" aria-hidden="true"></span></a>
+							</li>
+							<li><a href="#twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a>
+							</li>
+							<li><a href="#google"><span class="fa fa-google-plus" aria-hidden="true"></span></a>
+							</li>
+
+						</ul>
+					</div>
+				</div>
+			</div>
+			<button onclick="topFunction()" id="movetop" title="Go to top">
+				<span class="fa fa-arrow-up" aria-hidden="true"></span>
+			</button>
+			<script>
+				window.onscroll = function () {
+					scrollFunction()
+				};
+
+				function scrollFunction() {
+					if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+						document.getElementById("movetop").style.display = "block";
+					} else {
+						document.getElementById("movetop").style.display = "none";
+					}
+				}
+				function topFunction() {
+					document.body.scrollTop = 0;
+					document.documentElement.scrollTop = 0;
+				}
+			</script>
+		</section>
+	</footer>
+</body>
+
+</html>
+<script src="assets/js/theme-change.js"></script>
+<script>
+	$(function () {
+		$('.navbar-toggler').click(function () {
+			$('body').toggleClass('noscroll');
+		})
+	});
+</script>
+<script>
+	$(window).on("scroll", function () {
+		var scroll = $(window).scrollTop();
+
+		if (scroll >= 80) {
+			$("#site-header").addClass("nav-fixed");
+		} else {
+			$("#site-header").removeClass("nav-fixed");
+		}
+	});
+	$(".navbar-toggler").on("click", function () {
+		$("header").toggleClass("active");
+	});
+	$(document).on("ready", function () {
+		if ($(window).width() > 991) {
+			$("header").removeClass("active");
+		}
+		$(window).on("resize", function () {
+			if ($(window).width() > 991) {
+				$("header").removeClass("active");
+			}
+		});
+	});
+</script>
+<script src="assets/js/bootstrap.min.js"></script>

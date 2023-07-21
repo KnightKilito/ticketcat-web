@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zxx">
+
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/jquery.min.js"></script>
+<script>
+
+	var value = sessionStorage.getItem('getLoginInfo')
+	var loginInfo = window.JSON.parse(value)
+	var uid = loginInfo.uid
+
+	var mtemp = sessionStorage.getItem('mitem')
+	var mitem = window.JSON.parse(mtemp)
+	console.log(mitem)
+
+	var ctemp = sessionStorage.getItem('citem')
+	var citem = window.JSON.parse(ctemp)
+	console.log(citem)
+
+	var stemp = sessionStorage.getItem('sessions')
+	var session = window.JSON.parse(stemp)
+	console.log(session)
+
+	var isLogin = sessionStorage.getItem('isLogin')
+	var sid = sessionStorage.getItem('toseat_sid')
+
+	var select = []
+	var seats = []
+	var oldSeats = [] //原始数据
+	var selectedNum = 0
+	if(isLogin==null){
+		var isLogin = false
+	}
+	console.log(isLogin)
+	$(document).ready(function() {
+			console.log(isLogin)
+			if(isLogin==false){
+				var str =
+						'<a href="login.html">'+
+							'<img style="height: 40px;width: 40px;" src="assets/images/未登录-头像.png">'+
+						'</a>'+
+						'<a href="login.html">登录</a>';
+			}else{
+				var str =
+						'<a>'+
+							'<img style="height: 40px;width: 40px;" src='+loginInfo.avatar+'>'+
+						'</a>'+
+						'<button data-toggle="modal" data-target="#myModal">退出</button>'
+				}
+				$("#user").append(str)
+				var minfo = '<div class="select-movie-title">'+mitem.mname+'</div>'+
+							'<div class="select-movie-detail">'+session.date+'&nbsp;'+session.starttime+'-'+session.endtime+'&nbsp;'+mitem.style+'</div>'
+				$("#mname").append(minfo)
+
+				var cinfo = '<strong>'+citem.cname+'</strong>'
+				$("#cname").append(cinfo)
+
+				getSeats()	
+	})
+</script>
+<script>		
+	function exit(){
+		sessionStorage.clear()
+		window.location.href="index.html"
+	}
+	function getSeats(){
+
+		$.ajax({
+			url:'http://www.zhelovechun.top:8081/tpm/sessionseat/'+sid,
+			dataType: "json",
+			type: "GET",
+			xhrFields: {
+				withCredentials: true
+			},
+			crossDomain: true,
+			success(res){
+				// console.log(res)
+				if(res.state==0){
+					// console.log(res.datas)
+					var datas = window.JSON.stringify(res.datas)
+					sessionStorage.setItem('seats',datas)
+				}else
+					alert('请求出错了')
+			}
+      	})
+		var temp = sessionStorage.getItem('seats')
+		var temp2 = window.JSON.parse(temp)
+
+		var t = sessionStorage.getItem('seats')
+		var t2 = window.JSON.parse(t)
+		seats = temp2
+		oldSeats = t2
+		console.log(seats)
+		setSeats()
+	}
+
+	function setSeats(){
+		for (var i = 0; i<seats.length; i++){
+			if(seats[i].status==2)
+				var str = '<div class="bought" >'+i+'</div>'
+			else if(seats[i].status==1)
+				var str = '<div class="seat-excellent" onclick="clickSeat('+i+')">'+i+'</div>'
+			else if(seats[i].status==0)
+				var str = '<div id="ddd" class="seat " onclick="clickSeat('+i+')">'+i+'</div>'
+			else if(seats[i].status==9)
+				var str = '<div class="seated" onclick="clickSeat('+i+')">'+i+'</div>'
+			$("#addseat").append(str)
+		}
+	}
+    
+	function clickSeat(i){
+		if(seats[i].status!=9 && selectedNum<4){
+			seats[i].status=9
+			selectedNum++
+		}else if(seats[i].status==9){
+			alert
+			seats[i].status= oldSeats[i].status
+			selectedNum--
+		}
+		else if(selectedNum>=4)
+			alert('同时最多购买4张票')
+		else
+			console.log(seats[i].rowname+'排'+seats[i].columnname+'座')
+		// 删除
+
+		select = []
+		for(var i=0; i<seats.length; i++){
+			if(seats[i].status==9)
+			select.push(seats[i])
+		}
+		
+		var target = document.getElementById('addseat')
+		target.parentNode.removeChild(target)
+		//添加
+		$("#seats").append('<div id="addseat" style="width: 100%;height: auto;"></div>')
+		setSeats()
+		if(select.length>0)
+			setselect()
+		else
+			var target = document.getElementById('addselect')
+			target.parentNode.removeChild(target)
+
+			$("#box").append('<div id="addselect" style="height: 70px; width:100%;"></div>')
+	}
+	function setselect(){
+		if(document.getElementById('selectitem')){
+			var target = document.getElementById('addselect')
+			target.parentNode.removeChild(target)
+
+			$("#box").append('<div id="addselect" style="height: 70px; width:100%;"></div>')
+		}
+
+		for(var i=0; i<select.length; i++){
+			var str = '<div id="selectitem" style="margin:2px 10px;width: 100px;height:30px;float: left;border: 2px solid rgb(34 114 239);text-align: center;border-radius: 10px;">'+select[i].rowname+'排'+select[i].columnname+'座</div>'
+			$("#addselect").append(str)
+		}
+	}
+
+	function handlePay(){
+		console.log(select)
+		if(select.length>0)
+			pay()
+		else
+			alert('请先选座位！')
+	}
+	function pay(){
+		$.ajax({
+			url:'http://www.zhelovechun.top:8081/tpm/ticket/addTicketButNoMoney/'+uid,
+			contentType:'application/json',
+			type: "POST",
+			xhrFields: {
+				withCredentials: true
+			},
+			data:JSON.stringify(select),
+			xhrFields: {                               //保存session在跨域访问中不会丢失！！！
+                withCredentials: true
+            },
+			crossDomain: true,
+			beforeSend: function () {
+				console.log("正在进行，请稍候");
+			},
+			success: function (result) {
+				console.log("success")
+				console.log(result)
+				let ticketInfo = result.data
+				console.log(ticketInfo)
+				alipay(ticketInfo)
+			},
+			error: function (result) {
+				console.log("error")
+				location.reload()
+			}
+            })
+        }
+        function alipay(ticketInfo){
+            console.log("alipay():")
+            console.log(ticketInfo)
+            let ticket = {
+                tid: ticketInfo.tid,
+                sid: ticketInfo.sid,
+                mid: ticketInfo.mid,
+                uid: ticketInfo.uid,
+                tmoney: ticketInfo.tmoney,
+                tcontext: ticketInfo.tcontext
+            }
+            $.ajax({
+                url: "http://www.zhelovechun.top:8081/tpm/alipay/pay",
+                type: 'POST',
+                // // 告诉jQuery不要去处理发送的数据
+                // processData: false,
+                // // 告诉jQuery不要去设置Content-Type请求头
+                // contentType: 'application/json',
+                // dataType: 'json',
+                // headers:{
+                //     token:""
+                // },
+                // data: JSON.stringify(ticket),
+                data:ticket,
+                xhrFields: {                               //保存session在跨域访问中不会丢失！！！
+                    withCredentials: true
+                },
+                crossDomain: true,
+                beforeSend: function () {
+                    console.log("正在进行，请稍候");
+                },
+                success: function (result) {
+                    console.log("success")
+                    console.log(result)
+                    $("#paycheckbox").html( "<a>支付了吗？</a>"+
+                        "<button type=\"submit\" onclick=\"checkIfPay()\">已支付</button>"+
+                        "<button type=\"submit\" onclick=\"jump()\">未支付</button>");
+
+                    $("#paybox").html(result.message)
+
+
+                    // checkIfPay();
+                    //轮训获取用户支付状态
+                    // var task = setInterval(function () {
+                    //     checkIfPay();
+                    // }, 5000)
+                },
+                error: function (result) {
+                    console.log("error");
+                    location.reload();
+                }
+            });
+        }
+        function checkIfPay(){
+            $.ajax({
+                url: "http://www.zhelovechun.top:8081/tpm/ticket/checkPay",
+                type: 'GET',
+                success: function (checkPayRes) {//当判断支付成功——即ticket状态变成已支付后返回true
+                    console.log(checkPayRes);
+                    if(checkPayRes){
+                        clearInterval(task);
+                        location.href = 'success';//去支付成功后的页面
+                    }else{
+                        //未支付
+                    }
+                }
+
+            })
+        }
+</script>	
+
+<div id="paybox" hidden></div>
+<div id="paycheckbox" hidden></div>
+
+	<head>
+		<!-- Required meta tags -->
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>Movie</title>
+		<!-- Template CSS -->
+		<link rel="stylesheet" href="assets/css/style-starter.css">
+		<!-- Template CSS -->
+		<link
+			href="http://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,600&display=swap"
+			rel="stylesheet">
+		<!-- Template CSS -->
+
+	</head>
+
+	<body>
+
+		<!-- header -->
+		<header id="site-header" class="w3l-header fixed-top">
+			<!--/nav-->
+			<nav class="navbar navbar-expand-lg navbar-light fill px-lg-0 py-0 px-3">
+				<div class="container">
+					<h1><a class="navbar-brand" href="index.html"><span class="fa fa-play icon-log"
+								aria-hidden="true"></span>
+							淘票猫</a></h1>
+					<!-- if logo is image enable this   
+						<a class="navbar-brand" href="#index.html">
+							<img src="image-path" alt="Your logo" title="Your logo" style="height:35px;" />
+						</a> -->
+					<button class="navbar-toggler collapsed" type="button" data-toggle="collapse"
+						data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+						aria-expanded="false" aria-label="Toggle navigation">
+						<!-- <span class="navbar-toggler-icon"></span> -->
+						<span class="fa icon-expand fa-bars"></span>
+						<span class="fa icon-close fa-times"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<ul class="navbar-nav ml-auto">
+							<li class="nav-item">
+								<a class="nav-link" href="index.html">首页</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="movie.html">电影</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="cinema.html">影院</a>
+							</li>
+
+							<li class="nav-item">
+								<ul>
+									<div class="mine-dropdown">
+										<a href="#" class="dropbtn">我的</a>
+										<div class="dropdown-content">
+											<a href="modifyuser.html">修改个人信息</a>
+											<a href="modifypassword.html">修改密码</a>
+											<a href="myorder.html">我的订单</a>
+										</div>
+									</div>
+								</ul>
+							</li>
+						</ul>
+
+						<!--/search-right-->
+						<!--/search-right-->
+						<div class="search-right">
+							<a href="#search" class="btn search-hny mr-lg-3 mt-lg-0 mt-4" title="search">搜索 <span
+									class="fa fa-search ml-3" aria-hidden="true"></span></a>
+							<!-- search popup -->
+							<div id="search" class="pop-overlay">
+								<div class="popup">
+									<form action="#" method="post" class="search-box">
+										<input type="search" placeholder="请输入电影的名称" name="search" required="required"
+											autofocus="">
+										<button type="submit" class="btn"><span class="fa fa-search"
+												aria-hidden="true"></span></button>
+									</form>
+									<div class="browse-items">
+										<h3 class="hny-title two mt-md-5 mt-4">标签浏览:</h3>
+										<ul class="search-items">
+											<li><a href="movie.html">动作</a></li>
+											<li><a href="movie.html">戏剧</a></li>
+											<li><a href="movie.html">家庭</a></li>
+											<li><a href="movie.html">惊悚</a></li>
+											<li><a href="movie.html">喜剧</a></li>
+											<li><a href="movie.html">浪漫</a></li>
+											<li><a href="movie.html">恐怖</a></li>
+										</ul>
+									</div>
+								</div>
+								<a class="close" href="#close">×</a>
+							</div>
+							<!-- /search popup -->
+							<!--/search-right-->
+						</div>
+
+
+					</div>
+					<!-- toggle switch for light and dark theme -->
+					<div class="mobile-position">
+						<nav class="navigation">
+							<div class="theme-switch-wrapper">
+								<label class="theme-switch" for="checkbox">
+									<input type="checkbox" id="checkbox">
+									<div class="mode-container">
+										<i class="gg-sun"></i>
+										<i class="gg-moon"></i>
+									</div>
+								</label>
+							</div>
+						</nav>
+					</div>
+					<!-- //toggle switch for light and dark theme -->
+					<div class="user" id="user">
+						
+					</div>
+				</div>
+			</nav>
+			<!--//nav-->
+		</header>
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" id="myModalLabel">
+							是否要退出
+						</h4>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">否
+						</button>
+						<button type="button" class="btn btn-primary" onclick="exit()">
+							是
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="w3l-breadcrumbs">
+			<nav id="breadcrumbs" class="breadcrumbs">
+				<div class="container page-wrapper">
+					<a href="index.html">首页</a> » <span class="breadcrumb_last" aria-current="page">选择影院</span>
+				</div>
+			</nav>
+		</div>
+		<!--/tabs-->
+		<!-- //tabs-->
+
+
+		<section>
+			<div class="select-main">
+				<div class="select-top">
+					<div id="cname" class="select-cinema-top">
+
+					</div>
+					<div class="select-right">
+						<img src="assets/images/影院1.jpeg" alt="" class="select-img">
+						<div class="seat-classfiy">
+							<div class="seat"></div>
+							<div class="seat-excellent"></div>
+							<div class="seat-text">&nbsp;普通区</div>
+							<div class="seat-text">&nbsp;&nbsp;&nbsp;&nbsp;优选区</div>
+							<div class="bought"></div>
+							<div class="seated"></div>
+							<div class="seat-text">已被购买</div>
+							<div class="seat-text">您的选择</div>
+						</div>
+						<div id="mname" class="select-movie">
+							
+						</div>
+						<div class="seat-buy">
+							<div id="box" class="seat-buy-text">您选择了:</div>
+							<div id="addselect" style="height: 70px; width:100%;">
+
+							</div>
+						</div>
+						<div class="seat-btn">
+							<button onclick="handlePay()">结算</button>
+						</div>
+					</div>
+					<div class="screen-content">
+						<div class="visual-screen">
+							<div class="screen"></div>
+						</div>
+						<div class="visual-tip">3号厅-（请佩戴口罩、1.3米以上儿童购票）</div>
+					</div>
+					<div class="select-left">
+						<div class="seat-number">
+							<div class="number-one">第一排</div>
+							<div class="number">第二排</div>
+							<div class="number">第三排</div>
+							<div class="number">第四排</div>
+							<div class="number">第五排</div>
+						</div>
+						<div class="seat-content" id="seats">
+							<div id="addseat" style="width: 100%;height: auto;"></div>
+						</div>
+					</div>
+					
+					<hr class="select-hr" />
+				</div>
+			</div>
+		</section>
+
+
+		<!-- footer-66 -->
+		<footer class="w3l-footer">
+			<section class="footer-inner-main">
+				<div class="footer-hny-grids py-5">
+					<div class="container py-lg-4">
+						<div class="text-txt">
+							<div class="right-side">
+								<div class="row footer-about">
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner1.jpg"
+												alt=""></a>
+									</div>
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner2.jpg"
+												alt=""></a>
+									</div>
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner3.jpg"
+												alt=""></a>
+									</div>
+									<div class="col-md-3 col-6 footer-img mb-lg-0 mb-4">
+										<a href="genre.html"><img class="img-fluid" src="assets/images/banner4.jpg"
+												alt=""></a>
+									</div>
+								</div>
+								<div class="row footer-links">
+
+
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Movies</h6>
+										<ul>
+											<li><a href="#">Movies</a></li>
+											<li><a href="#">Videos</a></li>
+											<li><a href="#">English Movies</a></li>
+											<li><a href="#">Tailor</a></li>
+											<li><a href="#">Upcoming Movies</a></li>
+											<li><a href="contact.html">Contact Us</a></li>
+										</ul>
+									</div>
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Information</h6>
+										<ul>
+											<li><a href="index.html">Home</a> </li>
+											<li><a href="movie.html">电影</a> </li>
+											<li><a href="#">Tv Series</a> </li>
+											<li><a href="#">Blogs</a> </li>
+											<li><a href="#">Login</a></li>
+											<li><a href="contact.html">Contact</a></li>
+										</ul>
+									</div>
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Locations</h6>
+										<ul>
+											<li><a href="genre.html">Asia</a></li>
+											<li><a href="genre.html">France</a></li>
+											<li><a href="genre.html">Taiwan</a></li>
+											<li><a href="genre.html">United States</a></li>
+											<li><a href="genre.html">Korea</a></li>
+											<li><a href="genre.html">United Kingdom</a></li>
+										</ul>
+									</div>
+									<div class="col-md-3 col-sm-6 sub-two-right mt-5">
+										<h6>Newsletter</h6>
+										<form action="#" class="subscribe mb-3" method="post">
+											<input type="email" name="email" placeholder="Your Email Address"
+												required="">
+											<button><span class="fa fa-envelope-o"></span></button>
+										</form>
+										<p>Enter your email and receive the latest news, updates and special offers from
+											us.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				</div>
+				<div class="below-section">
+					<div class="container">
+						<div class="copyright-footer">
+							<div class="columns text-lg-left">
+								<p>Copyright &copy; 2020.Company name All rights reserved.<a target="_blank"
+										href="http://sc.chinaz.com/moban/">&#x7F51;&#x9875;&#x6A21;&#x677F;</a></p>
+							</div>
+
+							<ul class="social text-lg-right">
+								<li><a href="#facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a>
+								</li>
+								<li><a href="#linkedin"><span class="fa fa-linkedin" aria-hidden="true"></span></a>
+								</li>
+								<li><a href="#twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a>
+								</li>
+								<li><a href="#google"><span class="fa fa-google-plus" aria-hidden="true"></span></a>
+								</li>
+
+							</ul>
+						</div>
+					</div>
+				</div>
+				<!-- copyright -->
+				<!-- move top -->
+				<button onclick="topFunction()" id="movetop" title="Go to top">
+					<span class="fa fa-arrow-up" aria-hidden="true"></span>
+				</button>
+				<script>
+					// When the user scrolls down 20px from the top of the document, show the button
+					window.onscroll = function() {
+						scrollFunction()
+					};
+
+					function scrollFunction() {
+						if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+							document.getElementById("movetop").style.display = "block";
+						} else {
+							document.getElementById("movetop").style.display = "none";
+						}
+					}
+
+					// When the user clicks on the button, scroll to the top of the document
+					function topFunction() {
+						document.body.scrollTop = 0;
+						document.documentElement.scrollTop = 0;
+					}
+				</script>
+				<!-- /move top -->
+
+			</section>
+		</footer>
+		<!--//footer-66 -->
+	</body>
+
+</html>
+<!-- responsive tabs -->
+<script src="assets/js/jquery-1.9.1.min.js"></script>
+<script src="assets/js/easyResponsiveTabs.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+		//Horizontal Tab
+		$('#parentHorizontalTab').easyResponsiveTabs({
+			type: 'default', //Types: default, vertical, accordion
+			width: 'auto', //auto or any width like 600px
+			fit: true, // 100% fit in a container
+			tabidentify: 'hor_1', // The tab groups identifier
+			activate: function(event) { // Callback function if tab is switched
+				var $tab = $(this);
+				var $info = $('#nested-tabInfo');
+				var $name = $('span', $info);
+				$name.text($tab.text());
+				$info.show();
+			}
+		});
+	});
+</script>
+<!-- //responsive tabs -->
+<!--/theme-change-->
+<script src="assets/js/theme-change.js"></script>
+<!-- //theme-change-->
+<script src="assets/js/owl.carousel.js"></script>
+<!-- script for banner slider-->
+<script>
+	$(document).ready(function() {
+		$('.owl-one').owlCarousel({
+			stagePadding: 280,
+			loop: true,
+			margin: 20,
+			nav: true,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 1,
+					stagePadding: 40,
+					nav: false
+				},
+				480: {
+					items: 1,
+					stagePadding: 60,
+					nav: true
+				},
+				667: {
+					items: 1,
+					stagePadding: 80,
+					nav: true
+				},
+				1000: {
+					items: 1,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //script -->
+<script>
+	$(document).ready(function() {
+		$('.owl-three').owlCarousel({
+			loop: true,
+			margin: 20,
+			nav: false,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 2,
+					nav: false
+				},
+				480: {
+					items: 2,
+					nav: true
+				},
+				667: {
+					items: 3,
+					nav: true
+				},
+				1000: {
+					items: 5,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //script -->
+<!-- /mid-script -->
+<script>
+	$(document).ready(function() {
+		$('.owl-mid').owlCarousel({
+			loop: true,
+			margin: 0,
+			nav: false,
+			responsiveClass: true,
+			autoplay: true,
+			autoplayTimeout: 5000,
+			autoplaySpeed: 1000,
+			autoplayHoverPause: false,
+			responsive: {
+				0: {
+					items: 1,
+					nav: false
+				},
+				480: {
+					items: 1,
+					nav: false
+				},
+				667: {
+					items: 1,
+					nav: true
+				},
+				1000: {
+					items: 1,
+					nav: true
+				}
+			}
+		})
+	})
+</script>
+<!-- //mid-script -->
+
+<!-- script for owlcarousel -->
+<!-- Template JavaScript -->
+<script src="assets/js/jquery.magnific-popup.min.js"></script>
+<script>
+	$(document).ready(function() {
+		$('.popup-with-zoom-anim').magnificPopup({
+			type: 'inline',
+
+			fixedContentPos: false,
+			fixedBgPos: true,
+
+			overflowY: 'auto',
+
+			closeBtnInside: true,
+			preloader: false,
+
+			midClick: true,
+			removalDelay: 300,
+			mainClass: 'my-mfp-zoom-in'
+		});
+
+		$('.popup-with-move-anim').magnificPopup({
+			type: 'inline',
+
+			fixedContentPos: false,
+			fixedBgPos: true,
+
+			overflowY: 'auto',
+
+			closeBtnInside: true,
+			preloader: false,
+
+			midClick: true,
+			removalDelay: 300,
+			mainClass: 'my-mfp-slide-bottom'
+		});
+	});
+</script>
+<!--//-->
+<!-- disable body scroll which navbar is in active -->
+<script>
+	$(function() {
+		$('.navbar-toggler').click(function() {
+			$('body').toggleClass('noscroll');
+		})
+	});
+</script>
+<!-- disable body scroll which navbar is in active -->
+
+<!--/MENU-JS-->
+<script>
+	$(window).on("scroll", function() {
+		var scroll = $(window).scrollTop();
+
+		if (scroll >= 80) {
+			$("#site-header").addClass("nav-fixed");
+		} else {
+			$("#site-header").removeClass("nav-fixed");
+		}
+	});
+
+	//Main navigation Active Class Add Remove
+	$(".navbar-toggler").on("click", function() {
+		$("header").toggleClass("active");
+	});
+	$(document).on("ready", function() {
+		if ($(window).width() > 991) {
+			$("header").removeClass("active");
+		}
+		$(window).on("resize", function() {
+			if ($(window).width() > 991) {
+				$("header").removeClass("active");
+			}
+		});
+	});
+</script>
+<!--//MENU-JS-->
+
+

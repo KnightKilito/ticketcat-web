@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+	<script src="assets/js/jquery.min.js"></script>
+	<script src="assets/js/jquery-2.1.1.min.js"></script>
+	<script src="assets/js/bootstrap.min.js"></script>
+	<script type='text/javascript' src='http://cdn.staticfile.org/jquery/2.1.1/jquery.min.js'></script>
+	<script type="text/javascript" src="http://cdn.staticfile.org/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+	<script>
+		function login() {
+			console.log("ajax_login");
+			var user = {
+				username: $("#username").val(),
+				password: $("#password").val(),
+			}
+			var username = $("#username").val()
+			var password = $("#password").val()
+			if (username != "" && password != "") {
+				$.ajax({
+					url: "http://www.zhelovechun.top:8081/tpm/user/login",
+					dataType: "json",
+					data: JSON.stringify(user),
+					type: "post",
+					contentType: 'application/json;charset=UTF-8',
+					xhrFields: { //保存session在跨域访问中不会丢失！！！
+						withCredentials: true
+					},
+					crossDomain: true,
+					success: function(data) {
+						console.log(data)
+						if (data.state == 200) {
+							var value = window.JSON.stringify(data.data)
+							sessionStorage.setItem('getLoginInfo', value)
+							sessionStorage.setItem('token', data.data.token)
+							sessionStorage.setItem('isLogin', true)
+							window.location.href = "index.html"
+						} else if(data.state==106){
+							alert("账号不存在")
+						} else if(data.state==105){
+							alert("密码错误")
+						} else{
+							alert("请求出错了")
+						}
+					}
+				})
+			} else {
+				alert("请检查您的输入项不为空！");
+			}
+		}
+	</script>
+	<script>
+		function getQrcode() {
+		    //获取二维码参数
+		    $.get('http://www.zhelovechun.top:8081/tpm/wxUser/getQrCode', function (res) {
+		        //生成二维码
+				console.log(res)
+		        $('#qrcode').qrcode(res.url);
+		        //轮训获取用户扫码登录状态
+		        var task = setInterval(function () {
+		            $.post('http://www.zhelovechun.top:8081/tpm/wxUser/checkLogin', {ticket: res.ticket}, function (data) {
+		                //扫码成功登录成功
+						console.log(data)
+		                if (data.state==200) {
+		                    clearInterval(task)
+							var value = window.JSON.stringify(data.data)
+							sessionStorage.setItem('getLoginInfo', value)
+							sessionStorage.setItem('token', data.data.token)
+							sessionStorage.setItem('isLogin', true)
+							alert("初始化密码为123456，为了您的账号安全，请尽快修改！")
+							window.location.href = "index.html"
+		                }
+		            })
+		        }, 5000)
+		    })
+		}
+	</script>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Document</title>
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+			}
+
+			html {
+				height: 100%;
+			}
+
+			body {
+				background-image: linear-gradient(to bottom right, rgb(114, 135, 254), rgb(130, 88, 186));
+			}
+			.modal-open {
+				overflow: hidden;
+			}
+			
+			.modal-open .modal {
+				overflow-x: hidden;
+				overflow-y: auto;
+			}
+			
+			.modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				z-index: 1050;
+				display: none;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				outline: 0;
+			}
+			
+			.modal-dialog {
+				position: relative;
+				width: auto;
+				margin: 0.5rem;
+				pointer-events: none;
+			}
+			
+			.modal.fade .modal-dialog {
+				transition: transform 0.3s ease-out;
+				transform: translate(0, -50px);
+			}
+			
+			@media (prefers-reduced-motion: reduce) {
+				.modal.fade .modal-dialog {
+					transition: none;
+				}
+			}
+			
+			.modal.show .modal-dialog {
+				transform: none;
+			}
+			
+			.modal.modal-static .modal-dialog {
+				transform: scale(1.02);
+			}
+			
+			.modal-dialog-scrollable {
+				display: flex;
+				max-height: calc(100% - 1rem);
+			}
+			
+			.modal-dialog-scrollable .modal-content {
+				max-height: calc(100vh - 1rem);
+				overflow: hidden;
+			}
+			
+			.modal-dialog-scrollable .modal-header,
+			.modal-dialog-scrollable .modal-footer {
+				flex-shrink: 0;
+			}
+			
+			.modal-dialog-scrollable .modal-body {
+				overflow-y: auto;
+			}
+			
+			.modal-dialog-centered {
+				display: flex;
+				align-items: center;
+				min-height: calc(100% - 1rem);
+			}
+			
+			.modal-dialog-centered::before {
+				display: block;
+				height: calc(100vh - 1rem);
+				content: "";
+			}
+			
+			.modal-dialog-centered.modal-dialog-scrollable {
+				flex-direction: column;
+				justify-content: center;
+				height: 100%;
+			}
+			
+			.modal-dialog-centered.modal-dialog-scrollable .modal-content {
+				max-height: none;
+			}
+			
+			.modal-dialog-centered.modal-dialog-scrollable::before {
+				content: none;
+			}
+			
+			.modal-content {
+				position: relative;
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+				pointer-events: auto;
+				background-color: #fff;
+				background-clip: padding-box;
+				border: 1px solid rgba(0, 0, 0, 0.2);
+				border-radius: 0.3rem;
+				outline: 0;
+			}
+			
+			.modal-backdrop {
+				position: fixed;
+				top: 0;
+				left: 0;
+				z-index: 1040;
+				width: 100vw;
+				height: 100vh;
+				background-color: #000;
+			}
+			
+			.modal-backdrop.fade {
+				opacity: 0;
+			}
+			
+			.modal-backdrop.show {
+				opacity: 0.5;
+			}
+			
+			.modal-header {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				padding: 1rem 1rem;
+				border-bottom: 1px solid #dee2e6;
+				border-top-left-radius: calc(0.3rem - 1px);
+				border-top-right-radius: calc(0.3rem - 1px);
+			}
+			
+			.modal-header .close {
+				padding: 1rem 1rem;
+				margin: -1rem -1rem -1rem auto;
+			}
+			
+			.modal-title {
+				margin-bottom: 0;
+				line-height: 1.5;
+			}
+			
+			.modal-body {
+				position: relative;
+				flex: 1 1 auto;
+				padding: 1rem;
+			}
+			
+			.modal-footer {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				justify-content: flex-end;
+				padding: 0.75rem;
+				border-top: 1px solid #dee2e6;
+				border-bottom-right-radius: calc(0.3rem - 1px);
+				border-bottom-left-radius: calc(0.3rem - 1px);
+			}
+			
+			.modal-footer>* {
+				margin: 0.25rem;
+			}
+			
+			.modal-scrollbar-measure {
+				position: absolute;
+				top: -9999px;
+				width: 50px;
+				height: 50px;
+				overflow: scroll;
+			}
+			
+			@media (min-width: 576px) {
+				.modal-dialog {
+					max-width: 500px;
+					margin: 1.75rem auto;
+				}
+			
+				.modal-dialog-scrollable {
+					max-height: calc(100% - 3.5rem);
+				}
+			
+				.modal-dialog-scrollable .modal-content {
+					max-height: calc(100vh - 3.5rem);
+				}
+			
+				.modal-dialog-centered {
+					min-height: calc(100% - 3.5rem);
+				}
+			
+				.modal-dialog-centered::before {
+					height: calc(100vh - 3.5rem);
+				}
+			
+				.modal-sm {
+					max-width: 300px;
+				}
+			}
+			
+			@media (min-width: 992px) {
+			
+				.modal-lg,
+				.modal-xl {
+					max-width: 800px;
+				}
+			}
+			
+			@media (min-width: 1200px) {
+				.modal-xl {
+					max-width: 1140px;
+				}
+			}
+			.login-container {
+				width: 600px;
+				height: 315px;
+				margin: 0 auto;
+				margin-top: 10%;
+				border-radius: 15px;
+				box-shadow: 0 10px 50px 0px rbg(59, 45, 159);
+				background-color: rgb(95, 76, 194);
+			}
+
+			.left-container {
+				display: inline-block;
+				width: 330px;
+				border-top-left-radius: 15px;
+				border-bottom-left-radius: 15px;
+				padding: 60px;
+				background-image: linear-gradient(to bottom right, rgb(118, 76, 163), rgb(92, 103, 211));
+			}
+
+			.title {
+				color: #fff;
+				font-size: 18px;
+				font-weight: 200;
+			}
+
+			.title span {
+				border-bottom: 3px solid rgb(237, 221, 22);
+			}
+
+			.input-container {
+				padding: 20px 0;
+			}
+
+			input {
+				border: 0;
+				background: none;
+				outline: none;
+				color: #fff;
+				margin: 20px 0;
+				display: block;
+				width: 100%;
+				padding: 5px 0;
+				transition: .2s;
+				border-bottom: 1px solid rgb(199, 191, 219);
+			}
+
+			input:hover {
+				border-bottom-color: #fff;
+			}
+
+			::-webkit-input-placeholder {
+				color: rgb(199, 191, 219);
+			}
+
+			.message-container {
+				font-size: 14px;
+				transition: .2s;
+				color: rgb(199, 191, 219);
+				cursor: pointer;
+			}
+
+			.message-container:hover {
+				color: #fff;
+			}
+
+			.right-container {
+				width: 145px;
+				display: inline-block;
+				height: calc(100% - 120px);
+				vertical-align: top;
+				padding: 60px 0;
+			}
+
+			.regist-container {
+				text-align: center;
+				color: #fff;
+				font-size: 18px;
+				font-weight: 200;
+			}
+
+			.regist-container span {
+				border-bottom: 3px solid rgb(237, 221, 22);
+			}
+
+			.action-container {
+				font-size: 10px;
+				color: #fff;
+				text-align: center;
+				position: relative;
+				top: 200px;
+			}
+
+			.action-container span {
+				border: 1px solid rgb(237, 221, 22);
+				padding: 10px;
+				display: inline;
+				line-height: 20px;
+				border-radius: 20px;
+				position: absolute;
+				bottom: 10px;
+				left: calc(72px - 20px);
+				transition: .2s;
+				cursor: pointer;
+			}
+
+			.action-container span:hover {
+				background-color: rgb(237, 221, 22);
+				color: rgb(95, 76, 194);
+			}
+
+			.regist {
+				border-bottom: 3px solid rgb(237, 221, 22);
+				color: #fff;
+			}
+			
+		</style>
+
+	</head>
+	<body>
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								二维码登录
+							</h4>
+						</div>
+						<div class="modal-content">
+							<div id="qrcode"style="margin-left: 120px;"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">X
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		<div class="login-container">
+			<div class="left-container">
+				<div class="title"><span>登录</span></div>
+				<div class="input-container">
+					<form>
+						<input type="text" id="username" name="username" placeholder="用户名">
+						<input type="password" id="password" name="password" placeholder="密码">
+					</form>
+				</div>
+				<div class="message-container" >
+					<button data-toggle="modal" data-target="#myModal" onclick="getQrcode()">二维码登录</button>
+				</div>
+			</div>
+			<div class="right-container">
+				<div class="regist-container">
+					<a class="regist" href="register.html">注册</a>
+				</div>
+				<div class="action-container">
+					<span onclick="login()">提交</span>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+	
